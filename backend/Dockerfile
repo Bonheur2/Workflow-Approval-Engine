@@ -1,11 +1,11 @@
-# Backend: the Workflow & Approval Engine API.
-# Standard official PHP+Apache image, with only the one extension this
-# app actually needs (pdo_sqlite) compiled in - no Composer, no extra
-# packages, matching the "pure PHP, zero dependencies" design.
+# RUN docker-php-ext-install pdo_sqlite \
 
 FROM php:8.2-apache
 
-RUN docker-php-ext-install pdo_sqlite \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libsqlite3-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && docker-php-ext-install pdo_sqlite \
     && a2enmod rewrite
 
 # Serve from /public, not the repo root, so nothing outside the front
