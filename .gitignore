@@ -1,0 +1,32 @@
+# Environment files
+.env
+backend/.env
+frontend/.env
+
+# Dependencies
+vendor/
+node_modules/
+
+# Storage / runtime data
+backend/storage/*
+!backend/storage/.gitkeep
+*.log
+logs/
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Testing
+.phpunit.result.cache
+coverage/
