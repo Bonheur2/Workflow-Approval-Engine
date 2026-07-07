@@ -1,10 +1,11 @@
-# Frontend: the server-rendered PHP UI that talks to the backend API.
-# Only extension needed is curl (for ApiClient.php's HTTP calls to the
-# backend) - no Composer, no JS build step.
+
 
 FROM php:8.2-apache
 
-RUN docker-php-ext-install curl
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libcurl4-openssl-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && docker-php-ext-install curl
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
