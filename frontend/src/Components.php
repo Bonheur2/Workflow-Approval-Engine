@@ -200,6 +200,53 @@ function collect_kv_from_post(array $post, int $maxRows = 50): array
     return $data;
 }
 
+/**
+ * Renders one clearly-labeled value input per known field name (e.g. the
+ * distinct condition fields from a workflow's steps), instead of asking
+ * the requester to type the field name themselves - they only fill in the
+ * value, the real field name travels in a hidden input. Used by
+ * request_new.php alongside render_kv_rows() (kept for any "additional
+ * details" not covered by these known fields).
+ *
+ * @param array $fieldNames Known field names for the selected workflow, in order
+ * @param array $prefill Associative array of existing values to prefill (e.g. when resubmitting)
+ * @param array $post The current $_POST, so a failed submission doesn't lose what was typed
+ */
+function render_known_fields(array $fieldNames, array $prefill, array $post): void
+{
+    if (empty($fieldNames)) {
+        echo '<p class="empty">Select a workflow above to see which fields it needs.</p>';
+        return;
+    }
+    foreach ($fieldNames as $i => $name) {
+        $n = $i + 1;
+        $rawValue = array_key_exists($name, $prefill) ? $prefill[$name] : '';
+        $value = $post["known_value_$n"] ?? (is_scalar($rawValue) ? (string) $rawValue : '');
+        $label = ucwords(str_replace(['_', '-'], ' ', $name));
+        ?>
+        <div class="field-item">
+          <label><?= e($label) ?></label>
+          <input type="hidden" name="known_key_<?= $n ?>" value="<?= e($name) ?>">
+          <input type="text" name="known_value_<?= $n ?>" value="<?= e($value) ?>" placeholder="Enter <?= e($name) ?>">
+        </div>
+        <?php
+    }
+}
+
+/** Reads back the known_key_N / known_value_N rows produced by render_known_fields() into an assoc array, casting numeric-looking values to numbers. */
+function collect_known_fields_from_post(array $post, int $fieldCount): array
+{
+    $data = [];
+    for ($i = 1; $i <= $fieldCount; $i++) {
+        $key = trim($post["known_key_$i"] ?? '');
+        $value = trim($post["known_value_$i"] ?? '');
+        if ($key !== '' && $value !== '') {
+            $data[$key] = is_numeric($value) ? $value + 0 : $value;
+        }
+    }
+    return $data;
+}
+
 /** A centered "nothing here yet" placeholder, optionally with a call-to-action button. Used in place of the plain empty-table message. */
 function render_empty_state(string $message, ?string $actionLabel = null, ?string $actionUrl = null): void
 {

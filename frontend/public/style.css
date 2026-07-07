@@ -405,3 +405,7 @@ code { background: #f0f1f5; padding: 1px 5px; border-radius: 4px; font-size: 12.
 }
 .kv-remove:hover { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-bg); }
 .kv-add { margin-top: 4px; }
+
+.field-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+.field-item label { margin: 12px 0 5px; }
+.field-item:first-child label { margin-top: 0; }
