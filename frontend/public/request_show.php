@@ -5,7 +5,6 @@ require_login();
 $token = current_token();
 $user = current_user();
 $id = (int) ($_GET['id'] ?? 0);
-$dataRowCount = 8;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
@@ -18,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'resubmit') {
-        $data = collect_kv_from_post($_POST, $dataRowCount);
+        $data = collect_kv_from_post($_POST);
         $result = api_post("requests/$id/resubmit", ['data' => $data], $token);
         flash_result($result, 'Request resubmitted.');
         redirect("request_show.php?id=$id");
@@ -78,7 +77,7 @@ require __DIR__ . '/../templates/header.php';
   <p class="hint">This request was returned for modification. Fill in the corrected values and resubmit - evaluation restarts from the first step.</p>
   <form method="post">
     <input type="hidden" name="action" value="resubmit">
-    <?php render_kv_rows($dataRowCount, $req['data'] ?? [], $_POST); ?>
+    <?php render_kv_rows($req['data'] ?? [], $_POST); ?>
     <p style="margin-top:14px;"><button type="submit" class="btn btn-primary">Resubmit</button></p>
   </form>
 </div>

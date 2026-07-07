@@ -198,7 +198,8 @@ body {
   padding: 0 20px;
 }
 .container.with-sidebar {
-  margin: 88px 20px 28px 264px;
+  max-width: none;
+  margin: 88px 28px 28px 264px;
 }
 
 @media (max-width: 760px) {
@@ -376,3 +377,31 @@ textarea { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-siz
 .small { font-size: 12.5px; }
 .empty { color: var(--muted); font-style: italic; padding: 10px 0; }
 code { background: #f0f1f5; padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+}
+.empty-state p {
+  color: var(--muted);
+  font-size: 14.5px;
+  margin: 0 0 18px;
+}
+
+.kv-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.kv-row { display: flex; gap: 10px; align-items: center; }
+.kv-row input { flex: 1; }
+.kv-remove {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+.kv-remove:hover { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-bg); }
+.kv-add { margin-top: 4px; }

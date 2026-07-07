@@ -12,10 +12,16 @@ require __DIR__ . '/../templates/header.php';
 <h1>Workflows</h1>
 
 <div class="card">
-  <?php render_workflows_table($workflows, showDescription: true); ?>
+  <?php render_workflows_table(
+      $workflows,
+      showDescription: true,
+      emptyMessage: 'No workflows yet.',
+      emptyActionLabel: has_role('admin') ? 'Create a workflow' : null,
+      emptyActionUrl: has_role('admin') ? 'workflow_new.php' : null,
+  ); ?>
 </div>
 
-<?php if (has_role('admin')): ?>
+<?php if (has_role('admin') && !empty($workflows)): ?>
   <p><a href="workflow_new.php" class="btn btn-success">+ New workflow</a></p>
 <?php endif; ?>
 

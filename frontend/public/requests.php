@@ -13,9 +13,11 @@ require __DIR__ . '/../templates/header.php';
 <h1><?= e($pageTitle) ?></h1>
 
 <div class="card">
-  <?php render_requests_table($requests); ?>
+  <?php render_requests_table($requests, emptyMessage: 'No requests yet.', emptyActionLabel: 'Submit a new request', emptyActionUrl: 'workflows.php'); ?>
 </div>
 
-<p><a href="workflows.php" class="btn btn-primary">Submit a new request</a></p>
+<?php if (!empty($requests)): ?>
+  <p><a href="workflows.php" class="btn btn-primary">Submit a new request</a></p>
+<?php endif; ?>
 
 <?php require __DIR__ . '/../templates/footer.php'; ?>

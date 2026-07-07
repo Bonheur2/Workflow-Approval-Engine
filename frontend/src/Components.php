@@ -146,34 +146,51 @@ function collect_steps_from_post(array $post, int $count): array
 }
 
 /**
- * Renders $rowCount blank/prefilled "field name / value" row pairs, used
- * by both the "submit a request" form and the "resubmit a returned
- * request" form to build the request's free-form data payload.
+ * Renders blank/prefilled "field name / value" row pairs, used by both the
+ * "submit a request" form and the "resubmit a returned request" form to
+ * build the request's free-form data payload. Starts with one row per
+ * existing prefill entry (or one blank row) and lets the user add/remove
+ * rows client-side via the "+ Add field" button (see footer.php for the
+ * accompanying JS) - field_key_N/field_value_N stay sequentially numbered
+ * up to $maxRows so collect_kv_from_post() can read back however many the
+ * user ended up with.
  *
  * @param array $prefill Associative array of existing data to prefill (e.g. when resubmitting)
  * @param array $post The current $_POST, so a failed submission doesn't lose what was typed
  */
-function render_kv_rows(int $rowCount, array $prefill, array $post): void
+function render_kv_rows(array $prefill, array $post, int $maxRows = 50): void
 {
     $prefillKeys = array_keys($prefill);
-    for ($i = 1; $i <= $rowCount; $i++) {
-        $key = $post["field_key_$i"] ?? ($prefillKeys[$i - 1] ?? '');
-        $rawValue = $key !== '' && array_key_exists($key, $prefill) ? $prefill[$key] : '';
-        $value = $post["field_value_$i"] ?? (is_scalar($rawValue) ? (string) $rawValue : '');
-        ?>
-        <div class="row" style="margin-bottom:6px;">
-          <div><input type="text" name="field_key_<?= $i ?>" placeholder="field name, e.g. amount" value="<?= e($key) ?>"></div>
-          <div><input type="text" name="field_value_<?= $i ?>" placeholder="value, e.g. 12000" value="<?= e($value) ?>"></div>
-        </div>
-        <?php
+    $postedCount = 0;
+    for ($i = 1; $i <= $maxRows; $i++) {
+        if (($post["field_key_$i"] ?? '') !== '') {
+            $postedCount = $i;
+        }
     }
+    $rowCount = max(count($prefillKeys), $postedCount, 1);
+    ?>
+    <div class="kv-rows" data-max-rows="<?= $maxRows ?>">
+      <?php for ($i = 1; $i <= $rowCount; $i++):
+          $key = $post["field_key_$i"] ?? ($prefillKeys[$i - 1] ?? '');
+          $rawValue = $key !== '' && array_key_exists($key, $prefill) ? $prefill[$key] : '';
+          $value = $post["field_value_$i"] ?? (is_scalar($rawValue) ? (string) $rawValue : '');
+      ?>
+        <div class="kv-row">
+          <input type="text" name="field_key_<?= $i ?>" placeholder="field name, e.g. amount" value="<?= e($key) ?>">
+          <input type="text" name="field_value_<?= $i ?>" placeholder="value, e.g. 12000" value="<?= e($value) ?>">
+          <button type="button" class="kv-remove" aria-label="Remove field">&times;</button>
+        </div>
+      <?php endfor; ?>
+    </div>
+    <button type="button" class="btn btn-secondary btn-sm kv-add">+ Add field</button>
+    <?php
 }
 
 /** Reads back the field_key_N / field_value_N rows produced by render_kv_rows() into an assoc array, casting numeric-looking values to numbers. */
-function collect_kv_from_post(array $post, int $rowCount): array
+function collect_kv_from_post(array $post, int $maxRows = 50): array
 {
     $data = [];
-    for ($i = 1; $i <= $rowCount; $i++) {
+    for ($i = 1; $i <= $maxRows; $i++) {
         $key = trim($post["field_key_$i"] ?? '');
         $value = trim($post["field_value_$i"] ?? '');
         if ($key !== '' && $value !== '') {
@@ -183,11 +200,24 @@ function collect_kv_from_post(array $post, int $rowCount): array
     return $data;
 }
 
+/** A centered "nothing here yet" placeholder, optionally with a call-to-action button. Used in place of the plain empty-table message. */
+function render_empty_state(string $message, ?string $actionLabel = null, ?string $actionUrl = null): void
+{
+    ?>
+    <div class="empty-state">
+      <p><?= e($message) ?></p>
+      <?php if ($actionLabel && $actionUrl): ?>
+        <a href="<?= e($actionUrl) ?>" class="btn btn-primary"><?= e($actionLabel) ?></a>
+      <?php endif; ?>
+    </div>
+    <?php
+}
+
 /** A table of requests (id, workflow, status, step, submitted date, view link). Used by requests.php and approvals.php. */
-function render_requests_table(array $requests, bool $showViewLink = true): void
+function render_requests_table(array $requests, bool $showViewLink = true, string $emptyMessage = 'No requests found.', ?string $emptyActionLabel = null, ?string $emptyActionUrl = null): void
 {
     if (empty($requests)) {
-        echo '<p class="empty">No requests found.</p>';
+        render_empty_state($emptyMessage, $emptyActionLabel, $emptyActionUrl);
         return;
     }
     ?>
@@ -210,10 +240,10 @@ function render_requests_table(array $requests, bool $showViewLink = true): void
 }
 
 /** A table of workflows (name, status, version, view/submit links). Used by the dashboard and workflows.php. */
-function render_workflows_table(array $workflows, bool $showDescription = false): void
+function render_workflows_table(array $workflows, bool $showDescription = false, string $emptyMessage = 'No workflows available.', ?string $emptyActionLabel = null, ?string $emptyActionUrl = null): void
 {
     if (empty($workflows)) {
-        echo '<p class="empty">No workflows available.</p>';
+        render_empty_state($emptyMessage, $emptyActionLabel, $emptyActionUrl);
         return;
     }
     ?>
