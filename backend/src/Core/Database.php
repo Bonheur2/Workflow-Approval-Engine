@@ -6,7 +6,7 @@ use PDO;
 use PDOException;
 
 /**
- * Thin PDO wrapper. Supports sqlite (default, zero-config) and mysql.
+ * Thin PDO wrapper. Supports sqlite (default, zero-config), mysql, and pgsql.
  * Single shared connection per request (simple singleton).
  */
 class Database
@@ -29,6 +29,19 @@ class Database
                 $user = Env::get('DB_USERNAME', 'root');
                 $pass = Env::get('DB_PASSWORD', '');
                 $dsn = "mysql:host=$host;port=$port;dbname=$name;charset=utf8mb4";
+                $pdo = new PDO($dsn, $user, $pass, [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES => false,
+                ]);
+            } elseif ($driver === 'pgsql') {
+                $host = Env::get('DB_HOST', '127.0.0.1');
+                $port = Env::get('DB_PORT', '5432');
+                $name = Env::get('DB_DATABASE', 'workflow_engine');
+                $user = Env::get('DB_USERNAME', 'postgres');
+                $pass = Env::get('DB_PASSWORD', '');
+                $sslmode = Env::get('DB_SSLMODE', 'prefer');
+                $dsn = "pgsql:host=$host;port=$port;dbname=$name;sslmode=$sslmode";
                 $pdo = new PDO($dsn, $user, $pass, [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,

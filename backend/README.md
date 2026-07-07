@@ -76,6 +76,31 @@ php database/migrate.php
 php database/seed.php
 ```
 
+## Switching to PostgreSQL
+
+```bash
+# in .env
+DB_DRIVER=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=workflow_engine
+DB_USERNAME=postgres
+DB_PASSWORD=yourpassword
+DB_SSLMODE=prefer   # use "require" for most managed hosts (e.g. Render)
+```
+```bash
+createdb workflow_engine
+php database/migrate.php
+php database/seed.php
+```
+
+On Render specifically: create a "PostgreSQL" instance from the dashboard,
+then copy its Host/Port/Database/Username/Password (from that instance's
+"Connect" tab) into the **backend web service's** environment variables
+(`DB_DRIVER=pgsql`, `DB_SSLMODE=require`, plus the connection fields above)
+and redeploy. Unlike the default sqlite setup, this survives redeploys -
+sqlite's file lives inside the web service's own (ephemeral) container disk.
+
 ## Architecture
 
 ```
