@@ -20,7 +20,6 @@ Env::load(__DIR__ . '/../.env');
 
 // CORS: permissive by default so the API is easy to exercise from any
 // client/tool during evaluation. Tighten Access-Control-Allow-Origin in
-// a real deployment.
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
