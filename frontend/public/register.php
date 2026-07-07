@@ -36,24 +36,45 @@ $pageTitle = 'Register';
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="container" style="max-width: 420px; margin-top: 80px;">
-  <div class="card">
-    <h1>Create an account</h1>
-    <p class="hint">Self-registration always creates a <code>requester</code> account. Ask an administrator to grant approver/admin access afterward.</p>
+<div class="auth-page">
+  <div class="auth-card">
+    <!-- <div class="auth-logo">
+      <span class="brand-mark">W</span>
+      <span class="auth-logo-text">Workflow &amp; Approval Engine</span>
+    </div> -->
+    <h1 class="auth-title">Create your account</h1>
+    <p class="auth-subtitle">Self-registration creates a requester account, ask an administrator to grant approver/admin access afterward.</p>
+
     <?php if ($error): ?><div class="alert alert-error"><?= e($error) ?></div><?php endif; ?>
-    <form method="post">
+
+    <form method="post" class="auth-form">
       <label for="name">Full name</label>
-      <input type="text" id="name" name="name" required value="<?= e($_POST['name'] ?? '') ?>">
+      <input type="text" id="name" name="name" required value="<?= e($_POST['name'] ?? '') ?>" placeholder="Jane Doe">
+
       <label for="email">Email</label>
-      <input type="email" id="email" name="email" required value="<?= e($_POST['email'] ?? '') ?>">
+      <input type="email" id="email" name="email" required value="<?= e($_POST['email'] ?? '') ?>" placeholder="you@example.com">
+
       <label for="password">Password (min 8 characters)</label>
-      <input type="password" id="password" name="password" required minlength="8">
-      <p style="margin-top:18px;">
-        <button type="submit" class="btn btn-primary">Create account</button>
-      </p>
+      <div class="password-field">
+        <input type="password" id="password" name="password" required minlength="8">
+        <button type="button" class="password-toggle" data-target="password">Show</button>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" style="margin-top:22px;">Create account</button>
     </form>
-    <p class="hint"><a href="login.php">Back to log in</a></p>
+
+    <p class="hint" style="text-align:center; margin-top:20px;">Already have an account? <a class="auth-link" href="login.php">Log in</a></p>
   </div>
 </div>
+<script>
+document.querySelectorAll('.password-toggle').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var field = document.getElementById(btn.dataset.target);
+    var showing = field.type === 'text';
+    field.type = showing ? 'password' : 'text';
+    btn.textContent = showing ? 'Show' : 'Hide';
+  });
+});
+</script>
 </body>
 </html>

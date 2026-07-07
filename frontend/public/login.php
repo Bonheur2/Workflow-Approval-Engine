@@ -32,21 +32,54 @@ $pageTitle = 'Log in';
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="container" style="max-width: 420px; margin-top: 80px;">
-  <div class="card">
-    <h1>Log in</h1>
+<div class="auth-page">
+  <div class="auth-card">
+    <!-- <div class="auth-logo">
+      <span class="brand-mark">W</span>
+      <span class="auth-logo-text">Workflow &amp; Approval Engine</span>
+    </div> -->
+    <h1 class="auth-title">Welcome back</h1>
+    <p class="auth-subtitle">Log in to manage workflows and approvals</p>
+
     <?php if ($error): ?><div class="alert alert-error"><?= e($error) ?></div><?php endif; ?>
-    <form method="post">
+
+    <form method="post" class="auth-form">
       <label for="email">Email</label>
-      <input type="email" id="email" name="email" required value="<?= e($_POST['email'] ?? '') ?>">
+      <input type="email" id="email" name="email" required value="<?= e($_POST['email'] ?? '') ?>" placeholder="you@example.com">
+
       <label for="password">Password</label>
-      <input type="password" id="password" name="password" required>
-      <p style="margin-top:18px;">
-        <button type="submit" class="btn btn-primary">Log in</button>
+      <div class="password-field">
+        <input type="password" id="password" name="password" required>
+        <button type="button" class="password-toggle" data-target="password">Show</button>
+      </div>
+
+      <p class="auth-forgot">
+        <a href="#" onclick="event.preventDefault()" title="Contact an administrator to reset your password.">Forgot password?</a>
       </p>
+
+      <div class="auth-row">
+        <span>Remember sign-in details</span>
+        <label class="switch">
+          <input type="checkbox" name="remember">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">Log in</button>
     </form>
-    <p class="hint">No account? <a href="register.php">Register as a requester</a>.</p>
+
+    <p class="hint" style="text-align:center; margin-top:20px;">No account? <a class="auth-link" href="register.php">Register as a requester</a>.</p>
   </div>
 </div>
+<script>
+document.querySelectorAll('.password-toggle').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var field = document.getElementById(btn.dataset.target);
+    var showing = field.type === 'text';
+    field.type = showing ? 'password' : 'text';
+    btn.textContent = showing ? 'Show' : 'Hide';
+  });
+});
+</script>
 </body>
 </html>

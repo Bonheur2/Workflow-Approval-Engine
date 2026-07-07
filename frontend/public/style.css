@@ -225,6 +225,81 @@ body {
   margin-bottom: 18px;
 }
 
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+.auth-card { width: 100%; max-width: 440px; text-align: center; }
+.auth-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 32px;
+}
+.auth-logo-text { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: 0.2px; }
+.auth-title { font-size: 46px; font-weight: 800; margin: 0 0 8px; line-height: 1.25; }
+.auth-subtitle { color: var(--muted); font-size: 14.5px; margin: 0 0 28px; }
+.auth-form { text-align: left; }
+.auth-forgot { margin: 8px 0 0; text-align: right; }
+.auth-link { color: var(--primary); text-decoration: none; font-weight: 600; }
+.auth-link:hover { text-decoration: underline; }
+
+.password-field { position: relative; }
+.password-field input { padding-right: 64px; }
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+.auth-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 18px 0 22px;
+  font-size: 13.5px;
+  color: var(--text);
+}
+
+.switch { position: relative; display: inline-block; width: 40px; height: 22px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch-slider {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  background: #d7dae2;
+  border-radius: 999px;
+  transition: background 0.15s ease;
+}
+.switch-slider::before {
+  content: "";
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease;
+}
+.switch input:checked + .switch-slider { background: var(--primary); }
+.switch input:checked + .switch-slider::before { transform: translateX(18px); }
+
+.btn-block { display: block; width: 100%; text-align: center; padding: 12px; font-size: 15px; }
+
 h1 { font-size: 22px; margin: 0 0 16px; }
 h2 { font-size: 17px; margin: 0 0 14px; }
 h3 { font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin: 18px 0 8px; }
