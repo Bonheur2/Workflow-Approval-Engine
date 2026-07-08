@@ -301,6 +301,15 @@ body {
 
 .btn-block { display: block; width: 100%; text-align: center; padding: 12px; font-size: 15px; }
 
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.page-header h1 { margin-bottom: 0; }
+
 h1 { font-size: 22px; margin: 0 0 16px; }
 h2 { font-size: 17px; margin: 0 0 14px; }
 h3 { font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin: 18px 0 8px; }
@@ -318,6 +327,7 @@ table { width: 100%; border-collapse: collapse; font-size: 14px; }
 th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
 th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; }
 tr:last-child td { border-bottom: none; }
+.actions-cell { white-space: nowrap; width: 1%; }
 
 .badge {
   display: inline-block;

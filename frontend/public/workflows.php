@@ -9,7 +9,12 @@ $workflows = api_get('workflows', $token)['data']['data'] ?? [];
 require __DIR__ . '/../templates/header.php';
 ?>
 
-<h1>Workflows</h1>
+<div class="page-header">
+  <h1>Workflows</h1>
+  <?php if (has_role('admin') && !empty($workflows)): ?>
+    <a href="workflow_new.php" class="btn btn-success">+ New workflow</a>
+  <?php endif; ?>
+</div>
 
 <div class="card">
   <?php render_workflows_table(
@@ -20,9 +25,5 @@ require __DIR__ . '/../templates/header.php';
       emptyActionUrl: has_role('admin') ? 'workflow_new.php' : null,
   ); ?>
 </div>
-
-<?php if (has_role('admin') && !empty($workflows)): ?>
-  <p><a href="workflow_new.php" class="btn btn-success">+ New workflow</a></p>
-<?php endif; ?>
 
 <?php require __DIR__ . '/../templates/footer.php'; ?>

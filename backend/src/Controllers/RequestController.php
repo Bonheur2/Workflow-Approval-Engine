@@ -7,6 +7,7 @@ use App\Core\Response;
 use App\Core\Validator;
 use App\Models\AuditLog;
 use App\Models\RequestApproval;
+use App\Models\User;
 use App\Models\WorkflowRequest;
 use App\Services\WorkflowEngine;
 use RuntimeException;
@@ -76,6 +77,23 @@ class RequestController
         $req['workflow_snapshot'] = json_decode($req['workflow_snapshot'], true);
         $req['approvals'] = RequestApproval::forRequest($id);
         $req['audit_trail'] = AuditLog::forRequest($id);
+
+        $names = User::namesByIds(array_merge(
+            [$req['requester_id']],
+            array_column($req['approvals'], 'approver_id'),
+            array_column($req['approvals'], 'acted_by'),
+            array_column($req['audit_trail'], 'user_id'),
+        ));
+        $req['requester_name'] = $names[(int) $req['requester_id']] ?? ('User #' . (int) $req['requester_id']);
+        foreach ($req['approvals'] as &$approval) {
+            $approval['approver_name'] = $names[(int) $approval['approver_id']] ?? ('User #' . (int) $approval['approver_id']);
+            $approval['acted_by_name'] = $approval['acted_by'] ? ($names[(int) $approval['acted_by']] ?? ('User #' . (int) $approval['acted_by'])) : null;
+        }
+        unset($approval);
+        foreach ($req['audit_trail'] as &$entry) {
+            $entry['user_name'] = $names[(int) $entry['user_id']] ?? ('User #' . (int) $entry['user_id']);
+        }
+        unset($entry);
 
         Response::success($req);
     }

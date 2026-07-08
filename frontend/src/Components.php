@@ -306,7 +306,7 @@ function render_workflows_table(array $workflows, bool $showDescription = false,
         <?php if ($showDescription): ?><td class="muted small"><?= e($w['description']) ?></td><?php endif; ?>
         <td><?= render_badge($w['status']) ?></td>
         <td><?= (int) $w['version'] ?></td>
-        <td>
+        <td class="actions-cell">
           <a href="workflow_show.php?id=<?= (int) $w['id'] ?>" class="btn btn-secondary btn-sm">View</a>
           <?php if ($w['status'] === 'active'): ?>
             <a href="request_new.php?workflow_id=<?= (int) $w['id'] ?>" class="btn btn-primary btn-sm">Submit request</a>
@@ -322,7 +322,7 @@ function render_workflows_table(array $workflows, bool $showDescription = false,
 function render_approvals_table(array $approvals): void
 {
     if (empty($approvals)) {
-        echo '<p class="empty">No approval activity yet.</p>';
+        render_empty_state('No approval activity yet.');
         return;
     }
     ?>
@@ -331,9 +331,9 @@ function render_approvals_table(array $approvals): void
       <?php foreach ($approvals as $a): ?>
         <tr>
           <td><?= (int) $a['step_order'] ?></td>
-          <td>User #<?= (int) $a['approver_id'] ?></td>
+          <td><?= e($a['approver_name'] ?? ('User #' . (int) $a['approver_id'])) ?></td>
           <td><?= render_badge($a['status'] === 'skipped' ? 'inactive' : $a['status'], $a['status']) ?></td>
-          <td><?= $a['acted_by'] ? 'User #' . (int) $a['acted_by'] . ($a['acted_by'] != $a['approver_id'] ? ' (delegate)' : '') : '-' ?></td>
+          <td><?= $a['acted_by'] ? e($a['acted_by_name'] ?? ('User #' . (int) $a['acted_by'])) . ($a['acted_by'] != $a['approver_id'] ? ' (delegate)' : '') : '-' ?></td>
           <td class="small"><?= e($a['comments']) ?></td>
           <td class="small"><?= e($a['acted_at']) ?></td>
         </tr>
@@ -346,19 +346,21 @@ function render_approvals_table(array $approvals): void
 function render_audit_trail(array $entries): void
 {
     if (empty($entries)) {
-        echo '<p class="empty">No audit history.</p>';
+        render_empty_state('No audit history.');
         return;
     }
     ?>
-    <ul class="list-plain">
+    <table>
+      <tr><th>Action</th><th>User</th><th>Status change</th><th>Comments</th><th>When</th></tr>
       <?php foreach ($entries as $entry): ?>
-        <li>
-          <strong><?= e($entry['action']) ?></strong> by User #<?= (int) $entry['user_id'] ?>
-          <span class="small muted">- <?= e($entry['created_at']) ?></span><br>
-          <span class="small muted"><?= e($entry['previous_status']) ?> &rarr; <?= e($entry['new_status']) ?></span>
-          <?php if ($entry['comments']): ?><br><span class="small"><?= e($entry['comments']) ?></span><?php endif; ?>
-        </li>
+        <tr>
+          <td><strong><?= e($entry['action']) ?></strong></td>
+          <td><?= e($entry['user_name'] ?? ('User #' . (int) $entry['user_id'])) ?></td>
+          <td class="small muted"><?= e($entry['previous_status']) ?> &rarr; <?= e($entry['new_status']) ?></td>
+          <td class="small"><?= e($entry['comments']) ?></td>
+          <td class="small muted"><?= e($entry['created_at']) ?></td>
+        </tr>
       <?php endforeach; ?>
-    </ul>
+    </table>
     <?php
 }

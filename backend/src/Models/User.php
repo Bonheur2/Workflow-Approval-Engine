@@ -34,6 +34,23 @@ class User extends BaseModel
         return $stmt->fetchAll();
     }
 
+    /** Bulk id => name lookup, e.g. for labeling approvals/audit trail rows without exposing the admin-only /users endpoint. */
+    public static function namesByIds(array $ids): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+        if (empty($ids)) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = static::db()->prepare("SELECT id, name FROM users WHERE id IN ($placeholders)");
+        $stmt->execute($ids);
+        $names = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $names[(int) $row['id']] = $row['name'];
+        }
+        return $names;
+    }
+
     public static function setActive(int $id, bool $active): bool
     {
         return static::updateTable('users', $id, ['is_active' => $active ? 1 : 0]);

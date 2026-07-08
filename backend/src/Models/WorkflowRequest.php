@@ -50,7 +50,7 @@ class WorkflowRequest extends BaseModel
         $stmt = static::db()->prepare(
             'SELECT DISTINCT r.* FROM requests r
              JOIN request_approvals ra ON ra.request_id = r.id
-             WHERE ra.approver_id = :approver_id AND ra.status = "pending" AND r.status = "pending"
+             WHERE ra.approver_id = :approver_id AND ra.status = \'pending\' AND r.status = \'pending\'
              ORDER BY r.created_at ASC'
         );
         $stmt->execute(['approver_id' => $approverId]);

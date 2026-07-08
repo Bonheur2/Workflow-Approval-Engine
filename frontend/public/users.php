@@ -61,7 +61,7 @@ require __DIR__ . '/../templates/header.php';
       <td><?= e($u['email']) ?></td>
       <td><?= e($u['role']) ?></td>
       <td><?= render_badge($u['is_active'] ? 'active' : 'inactive') ?></td>
-      <td>
+      <td class="actions-cell">
         <form method="post" style="display:inline;">
           <input type="hidden" name="action" value="role">
           <input type="hidden" name="user_id" value="<?= (int) $u['id'] ?>">

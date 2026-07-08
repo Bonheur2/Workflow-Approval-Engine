@@ -38,7 +38,7 @@ class RequestApproval extends BaseModel
     {
         $stmt = static::db()->prepare(
             'SELECT * FROM request_approvals
-             WHERE request_id = :rid AND step_order = :step AND approver_id = :approver AND status = "pending"'
+             WHERE request_id = :rid AND step_order = :step AND approver_id = :approver AND status = \'pending\''
         );
         $stmt->execute(['rid' => $requestId, 'step' => $stepOrder, 'approver' => $approverId]);
         $row = $stmt->fetch();
@@ -58,8 +58,8 @@ class RequestApproval extends BaseModel
     public static function skipRemaining(int $requestId, int $stepOrder): void
     {
         $stmt = static::db()->prepare(
-            'UPDATE request_approvals SET status = "skipped"
-             WHERE request_id = :rid AND step_order = :step AND status = "pending"'
+            'UPDATE request_approvals SET status = \'skipped\'
+             WHERE request_id = :rid AND step_order = :step AND status = \'pending\''
         );
         $stmt->execute(['rid' => $requestId, 'step' => $stepOrder]);
     }
