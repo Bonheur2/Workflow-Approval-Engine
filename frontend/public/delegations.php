@@ -35,8 +35,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$users = api_get('users', $token)['data']['data'] ?? [];
-$candidates = array_filter($users, fn($u) => in_array($u['role'], ['approver', 'admin'], true) && $u['is_active'] && (int) $u['id'] !== (int) $user['id']);
+$users = api_get('users/approvers', $token)['data']['data'] ?? [];
+$candidates = array_filter($users, fn($u) => (int) $u['id'] !== (int) $user['id']);
+$namesById = [];
+foreach ($users as $u) {
+    $namesById[(int) $u['id']] = $u['name'];
+}
 $myDelegations = api_get('delegations', $token)['data']['data'] ?? [];
 
 require __DIR__ . '/../templates/header.php';
@@ -55,7 +59,7 @@ require __DIR__ . '/../templates/header.php';
       <tr><th>Delegate</th><th>Start</th><th>End</th><th>Status</th><th></th></tr>
       <?php foreach ($myDelegations as $d): ?>
       <tr>
-        <td>User #<?= (int) $d['delegate_id'] ?></td>
+        <td><?= e($namesById[(int) $d['delegate_id']] ?? ('User #' . (int) $d['delegate_id'])) ?></td>
         <td><?= e($d['start_date']) ?></td>
         <td><?= e($d['end_date']) ?></td>
         <td><?= render_badge($d['active'] ? 'active' : 'inactive', $d['active'] ? 'active' : 'revoked') ?></td>

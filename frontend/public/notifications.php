@@ -31,6 +31,9 @@ require __DIR__ . '/../templates/header.php';
         <li>
           <?php if (!$n['is_read']): ?><strong><?= e($n['message']) ?></strong><?php else: ?><span class="muted"><?= e($n['message']) ?></span><?php endif; ?>
           <br><span class="small muted"><?= e($n['type']) ?> &middot; <?= e($n['created_at']) ?></span>
+          <?php if (!empty($n['request_id'])): ?>
+            <a href="request_show.php?id=<?= (int) $n['request_id'] ?>" class="btn btn-primary btn-sm" style="margin-left:8px;">View request</a>
+          <?php endif; ?>
           <?php if (!$n['is_read']): ?>
             <form method="post" style="display:inline;">
               <input type="hidden" name="action" value="mark_read">

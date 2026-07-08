@@ -16,6 +16,13 @@ class UserController
         Response::success($users);
     }
 
+
+    public static function approverCandidates(Request $request): void
+    {
+        $users = array_filter(User::all(), fn($u) => in_array($u['role'], ['approver', 'admin'], true) && $u['is_active']);
+        Response::success(array_values(array_map([User::class, 'sanitize'], $users)));
+    }
+
     /** GET /api/users/{id} */
     public static function show(Request $request, array $params): void
     {

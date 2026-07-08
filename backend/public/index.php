@@ -43,6 +43,7 @@ $router->get('/api/auth/me', [AuthController::class, 'me'], [$auth]);
 // ---------------------------------------------------------------------
 $router->get('/api/users', [UserController::class, 'index'], [$auth, RoleMiddleware::handle('admin')]);
 $router->post('/api/users', [UserController::class, 'store'], [$auth, RoleMiddleware::handle('admin')]);
+$router->get('/api/users/approvers', [UserController::class, 'approverCandidates'], [$auth, RoleMiddleware::handle('approver', 'admin')]);
 $router->get('/api/users/{id}', [UserController::class, 'show'], [$auth, RoleMiddleware::handle('admin')]);
 $router->patch('/api/users/{id}/role', [UserController::class, 'updateRole'], [$auth, RoleMiddleware::handle('admin')]);
 $router->patch('/api/users/{id}/status', [UserController::class, 'updateStatus'], [$auth, RoleMiddleware::handle('admin')]);
