@@ -328,6 +328,7 @@ th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--bor
 th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; }
 tr:last-child td { border-bottom: none; }
 .actions-cell { white-space: nowrap; width: 1%; }
+.row-unread { background: #f5f8ff; }
 
 .badge {
   display: inline-block;

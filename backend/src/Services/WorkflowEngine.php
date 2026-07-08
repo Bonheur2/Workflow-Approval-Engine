@@ -270,10 +270,12 @@ class WorkflowEngine
                 continue; // step not reachable for this request, skip it
             }
 
-            $approverIds = self::resolveApprovers($step);
+            $approverIds = self::resolveApprovers($step, $requesterId);
             if (empty($approverIds)) {
-                // No eligible approver found for this step; skip forward
-                // rather than deadlocking the request.
+                // No eligible approver found for this step (or the only
+                // match was the requester themselves, excluded below to
+                // prevent self-approval); skip forward rather than
+                // deadlocking the request.
                 continue;
             }
 
@@ -301,14 +303,22 @@ class WorkflowEngine
         NotificationService::requestApproved($requesterId, $requestId);
     }
 
-    private static function resolveApprovers(array $step): array
+    /**
+     * Resolves the step's assigned approver(s), excluding the requester
+     * themselves - a requester who also happens to hold the approver role
+     * (or is specifically named on the step) must never be able to approve
+     * their own request.
+     */
+    private static function resolveApprovers(array $step, int $requesterId): array
     {
         if (!empty($step['approver_user_id'])) {
-            return [(int) $step['approver_user_id']];
+            $userId = (int) $step['approver_user_id'];
+            return $userId === $requesterId ? [] : [$userId];
         }
         if (!empty($step['approver_role'])) {
             $users = User::findAllByRole($step['approver_role']);
-            return array_map(fn($u) => (int) $u['id'], $users);
+            $ids = array_map(fn($u) => (int) $u['id'], $users);
+            return array_values(array_filter($ids, fn($id) => $id !== $requesterId));
         }
         return [];
     }

@@ -1,0 +1,462 @@
+{
+  "info": {
+    "name": "Workflow & Approval Engine API",
+    "description": "Full request collection for the Workflow & Approval Engine backend. Run \"Login\" first - it automatically saves the returned JWT into the {{token}} collection variable, which every other request uses via the collection-level Authorization header.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "workflow-approval-engine"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000/api", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "workflow_id", "value": "1", "type": "string" },
+    { "key": "request_id", "value": "1", "type": "string" },
+    { "key": "user_id", "value": "2", "type": "string" },
+    { "key": "delegation_id", "value": "1", "type": "string" },
+    { "key": "notification_id", "value": "1", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"] },
+            "auth": { "type": "noauth" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "auth": { "type": "noauth" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dan Requester\",\n  \"email\": \"dan@example.com\",\n  \"password\": \"SecurePass123\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data && json.data.token) {",
+                  "    pm.collectionVariables.set('token', json.data.token);",
+                  "    console.log('Saved token to {{token}}');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "auth": { "type": "noauth" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@itec.rw\",\n  \"password\": \"AdminPass123\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Current user (me)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/auth/me", "host": ["{{base_url}}"], "path": ["auth", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users (admin only)",
+      "item": [
+        {
+          "name": "List users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/users", "host": ["{{base_url}}"], "path": ["users"] }
+          }
+        },
+        {
+          "name": "List approver/admin candidates (for delegation)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/users/approvers", "host": ["{{base_url}}"], "path": ["users", "approvers"] }
+          }
+        },
+        {
+          "name": "Show one user",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create user",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Approver\",\n  \"email\": \"new.approver@itec.rw\",\n  \"password\": \"SecurePass123\",\n  \"role\": \"approver\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/users", "host": ["{{base_url}}"], "path": ["users"] }
+          }
+        },
+        {
+          "name": "Update user role",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"role\": \"approver\"\n}" },
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}/role",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}", "role"]
+            }
+          }
+        },
+        {
+          "name": "Activate/deactivate user",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"is_active\": false\n}" },
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Workflows",
+      "item": [
+        {
+          "name": "List workflows",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/workflows", "host": ["{{base_url}}"], "path": ["workflows"] }
+          }
+        },
+        {
+          "name": "Show workflow (+ steps)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/workflows/{{workflow_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["workflows", "{{workflow_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create workflow",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data && json.data.id) {",
+                  "    pm.collectionVariables.set('workflow_id', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Purchase Request\",\n  \"description\": \"Approval flow for company purchases\",\n  \"steps\": [\n    { \"step_order\": 1, \"name\": \"Finance Review\", \"approver_role\": \"approver\", \"approval_type\": \"single\", \"conditions\": [] },\n    { \"step_order\": 2, \"name\": \"Legal Review\", \"approver_role\": \"approver\", \"approval_type\": \"single\",\n      \"conditions\": [ { \"field\": \"amount\", \"operator\": \">\", \"value\": 10000 } ] },\n    { \"step_order\": 3, \"name\": \"Executive Approval\", \"approver_role\": \"approver\", \"approval_type\": \"all\",\n      \"conditions\": [ { \"field\": \"amount\", \"operator\": \">\", \"value\": 50000 } ] }\n  ]\n}"
+            },
+            "url": { "raw": "{{base_url}}/workflows", "host": ["{{base_url}}"], "path": ["workflows"] }
+          }
+        },
+        {
+          "name": "Update workflow (name/description/status)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"active\"\n}" },
+            "url": {
+              "raw": "{{base_url}}/workflows/{{workflow_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["workflows", "{{workflow_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Replace workflow steps",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"steps\": [\n    { \"step_order\": 1, \"name\": \"Manager Review\", \"approver_role\": \"approver\", \"approval_type\": \"single\", \"conditions\": [] }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/workflows/{{workflow_id}}/steps",
+              "host": ["{{base_url}}"],
+              "path": ["workflows", "{{workflow_id}}", "steps"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Requests",
+      "item": [
+        {
+          "name": "List requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/requests", "host": ["{{base_url}}"], "path": ["requests"] }
+          }
+        },
+        {
+          "name": "Submit request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data && json.data.id) {",
+                  "    pm.collectionVariables.set('request_id', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"workflow_id\": {{workflow_id}},\n  \"data\": { \"amount\": 12000, \"department\": \"Finance\" }\n}"
+            },
+            "url": { "raw": "{{base_url}}/requests", "host": ["{{base_url}}"], "path": ["requests"] }
+          }
+        },
+        {
+          "name": "Show request (+ approvals + audit trail)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/requests/{{request_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["requests", "{{request_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Resubmit returned request",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": { \"amount\": 9000, \"department\": \"Finance\" }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/requests/{{request_id}}/resubmit",
+              "host": ["{{base_url}}"],
+              "path": ["requests", "{{request_id}}", "resubmit"]
+            }
+          }
+        },
+        {
+          "name": "Request history (audit trail only)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/requests/{{request_id}}/history",
+              "host": ["{{base_url}}"],
+              "path": ["requests", "{{request_id}}", "history"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Approvals",
+      "item": [
+        {
+          "name": "My approval queue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/approvals", "host": ["{{base_url}}"], "path": ["approvals"] }
+          }
+        },
+        {
+          "name": "Approve request",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"comments\": \"Looks good to me.\"\n}" },
+            "url": {
+              "raw": "{{base_url}}/requests/{{request_id}}/approve",
+              "host": ["{{base_url}}"],
+              "path": ["requests", "{{request_id}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "Reject request",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"comments\": \"Over budget for this quarter.\"\n}" },
+            "url": {
+              "raw": "{{base_url}}/requests/{{request_id}}/reject",
+              "host": ["{{base_url}}"],
+              "path": ["requests", "{{request_id}}", "reject"]
+            }
+          }
+        },
+        {
+          "name": "Return request for modification",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"comments\": \"Please attach a quote.\"\n}" },
+            "url": {
+              "raw": "{{base_url}}/requests/{{request_id}}/return",
+              "host": ["{{base_url}}"],
+              "path": ["requests", "{{request_id}}", "return"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delegations",
+      "item": [
+        {
+          "name": "List my delegations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/delegations", "host": ["{{base_url}}"], "path": ["delegations"] }
+          }
+        },
+        {
+          "name": "Create delegation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data && json.data.id) {",
+                  "    pm.collectionVariables.set('delegation_id', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"delegate_id\": {{user_id}},\n  \"start_date\": \"2026-07-01\",\n  \"end_date\": \"2026-07-10\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/delegations", "host": ["{{base_url}}"], "path": ["delegations"] }
+          }
+        },
+        {
+          "name": "Revoke delegation",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/delegations/{{delegation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["delegations", "{{delegation_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "List notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/notifications", "host": ["{{base_url}}"], "path": ["notifications"] }
+          }
+        },
+        {
+          "name": "List unread notifications only",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/notifications?unread=1",
+              "host": ["{{base_url}}"],
+              "path": ["notifications"],
+              "query": [{ "key": "unread", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "Mark notification as read",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/notifications/{{notification_id}}/read",
+              "host": ["{{base_url}}"],
+              "path": ["notifications", "{{notification_id}}", "read"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

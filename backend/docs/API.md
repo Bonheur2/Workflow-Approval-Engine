@@ -45,15 +45,16 @@ Returns the authenticated user's profile.
 
 ---
 
-## User management *(admin only)*
+## User management
 
-| Method | Path | Description |
-|---|---|---|
-| GET | `/users` | List all users |
-| GET | `/users/{id}` | Show one user |
-| POST | `/users` | Create a user with any role directly |
-| PATCH | `/users/{id}/role` | Change a user's role |
-| PATCH | `/users/{id}/status` | Activate/deactivate (`{ "is_active": false }`) |
+| Method | Path | Role | Description |
+|---|---|---|---|
+| GET | `/users` | admin | List all users |
+| GET | `/users/{id}` | admin | Show one user |
+| POST | `/users` | admin | Create a user with any role directly |
+| PATCH | `/users/{id}/role` | admin | Change a user's role |
+| PATCH | `/users/{id}/status` | admin | Activate/deactivate (`{ "is_active": false }`) |
+| GET | `/users/approvers` | approver/admin | Active approver/admin accounts only - powers the "delegate to" picker without exposing the full admin-only user list |
 
 ---
 

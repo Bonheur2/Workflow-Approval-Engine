@@ -2,10 +2,7 @@
 
 namespace App\Models;
 
-/**
- * Append-only audit trail. Intentionally exposes no update()/delete()
- * methods: the audit history must never be mutated.
- */
+
 class AuditLog extends BaseModel
 {
     protected static string $table = 'audit_logs';

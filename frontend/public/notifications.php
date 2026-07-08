@@ -16,34 +16,40 @@ $notifications = api_get('notifications' . ($showUnreadOnly ? '?unread=1' : ''),
 require __DIR__ . '/../templates/header.php';
 ?>
 
-<h1>Notifications</h1>
-<p>
-  <a href="notifications.php" class="btn btn-sm <?= !$showUnreadOnly ? 'btn-primary' : 'btn-secondary' ?>">All</a>
-  <a href="notifications.php?unread=1" class="btn btn-sm <?= $showUnreadOnly ? 'btn-primary' : 'btn-secondary' ?>">Unread only</a>
-</p>
+<div class="page-header">
+  <h1>Notifications</h1>
+  <p style="margin:0;">
+    <a href="notifications.php" class="btn btn-sm <?= !$showUnreadOnly ? 'btn-primary' : 'btn-secondary' ?>">All</a>
+    <a href="notifications.php?unread=1" class="btn btn-sm <?= $showUnreadOnly ? 'btn-primary' : 'btn-secondary' ?>">Unread only</a>
+  </p>
+</div>
 
 <div class="card">
   <?php if (empty($notifications)): ?>
-    <p class="empty">Nothing here.</p>
+    <?php render_empty_state('Nothing here.'); ?>
   <?php else: ?>
-    <ul class="list-plain">
+    <table>
+      <tr><th>Notification</th><th>Type</th><th>When</th><th></th></tr>
       <?php foreach ($notifications as $n): ?>
-        <li>
-          <?php if (!$n['is_read']): ?><strong><?= e($n['message']) ?></strong><?php else: ?><span class="muted"><?= e($n['message']) ?></span><?php endif; ?>
-          <br><span class="small muted"><?= e($n['type']) ?> &middot; <?= e($n['created_at']) ?></span>
-          <?php if (!empty($n['request_id'])): ?>
-            <a href="request_show.php?id=<?= (int) $n['request_id'] ?>" class="btn btn-primary btn-sm" style="margin-left:8px;">View request</a>
-          <?php endif; ?>
-          <?php if (!$n['is_read']): ?>
-            <form method="post" style="display:inline;">
-              <input type="hidden" name="action" value="mark_read">
-              <input type="hidden" name="id" value="<?= (int) $n['id'] ?>">
-              <button type="submit" class="btn btn-secondary btn-sm" style="margin-left:8px;">Mark read</button>
-            </form>
-          <?php endif; ?>
-        </li>
+        <tr class="<?= $n['is_read'] ? '' : 'row-unread' ?>">
+          <td><?= $n['is_read'] ? '<span class="muted">' . e($n['message']) . '</span>' : '<strong>' . e($n['message']) . '</strong>' ?></td>
+          <td class="small muted"><?= e($n['type']) ?></td>
+          <td class="small muted"><?= e($n['created_at']) ?></td>
+          <td class="actions-cell">
+            <?php if (!empty($n['request_id'])): ?>
+              <a href="request_show.php?id=<?= (int) $n['request_id'] ?>" class="btn btn-primary btn-sm">View request</a>
+            <?php endif; ?>
+            <?php if (!$n['is_read']): ?>
+              <form method="post" style="display:inline;">
+                <input type="hidden" name="action" value="mark_read">
+                <input type="hidden" name="id" value="<?= (int) $n['id'] ?>">
+                <button type="submit" class="btn btn-secondary btn-sm">Mark read</button>
+              </form>
+            <?php endif; ?>
+          </td>
+        </tr>
       <?php endforeach; ?>
-    </ul>
+    </table>
   <?php endif; ?>
 </div>
 

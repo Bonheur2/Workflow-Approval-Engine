@@ -1,0 +1,720 @@
+openapi: 3.0.3
+info:
+  title: Workflow & Approval Engine API
+  description: |
+    A configurable Workflow & Approval Engine. Organizations define workflows
+    and their approval steps entirely through this API - nothing about a
+    specific business process (Leave Request, Purchase Request, Expense
+    Claim, ...) is hardcoded server-side.
+
+    ### Authentication
+    Every endpoint except `POST /auth/register` and `POST /auth/login`
+    requires a bearer token obtained from `POST /auth/login`:
+    ```
+    Authorization: Bearer <token>
+    ```
+
+    ### Response envelope
+    Every response (success or error) uses the same shape:
+    ```json
+    { "success": true, "message": "...", "data": { ... } }
+    { "success": false, "message": "...", "errors": { ... } }
+    ```
+  version: "1.0.0"
+  license:
+    name: Unlicense / internal evaluation use
+
+servers:
+  - url: http://localhost:8000/api
+    description: Local development
+  - url: https://{host}/api
+    description: Deployed backend (e.g. Render)
+    variables:
+      host:
+        default: your-backend.onrender.com
+
+tags:
+  - name: Auth
+  - name: Users
+  - name: Workflows
+  - name: Requests
+  - name: Approvals
+  - name: Delegations
+  - name: Notifications
+  - name: Health
+
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      security: []
+      responses:
+        "200":
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          status: { type: string, example: ok }
+                          time: { type: string, format: date-time }
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Self-register (always creates a "requester" account)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name: { type: string, example: Dan Requester }
+                email: { type: string, format: email, example: dan@example.com }
+                password: { type: string, format: password, minLength: 8, example: SecurePass123 }
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Envelope" }
+        "409":
+          description: Email already registered
+        "422":
+          description: Validation failed
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in and obtain a JWT
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email, example: admin@itec.rw }
+                password: { type: string, format: password, example: AdminPass123 }
+      responses:
+        "200":
+          description: Login succeeded
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          token: { type: string }
+                          token_type: { type: string, example: Bearer }
+                          expires_in: { type: integer, example: 3600 }
+                          user: { $ref: "#/components/schemas/User" }
+        "401":
+          description: Invalid credentials
+        "403":
+          description: Account deactivated
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Get the authenticated user's profile
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/User" }
+
+  /users:
+    get:
+      tags: [Users]
+      summary: List all users (admin only)
+      responses:
+        "200":
+          description: OK
+        "403":
+          description: Not an admin
+    post:
+      tags: [Users]
+      summary: Create a user with any role directly (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, role]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                password: { type: string, format: password, minLength: 8 }
+                role: { type: string, enum: [admin, approver, requester] }
+      responses:
+        "201":
+          description: User created
+        "409":
+          description: Email already registered
+        "422":
+          description: Validation failed
+
+  /users/approvers:
+    get:
+      tags: [Users]
+      summary: List active approver/admin accounts (approver or admin)
+      description: >-
+        Scoped down from the admin-only user list so any approver can
+        populate a "delegate to" picker without needing full user-management
+        access. Never returns requester accounts.
+      responses:
+        "200":
+          description: OK
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Show one user (admin only)
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not found
+
+  /users/{id}/role:
+    patch:
+      tags: [Users]
+      summary: Change a user's role (admin only)
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role: { type: string, enum: [admin, approver, requester] }
+      responses:
+        "200":
+          description: Role updated
+        "404":
+          description: Not found
+
+  /users/{id}/status:
+    patch:
+      tags: [Users]
+      summary: Activate/deactivate a user (admin only)
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [is_active]
+              properties:
+                is_active: { type: boolean }
+      responses:
+        "200":
+          description: Status updated
+        "404":
+          description: Not found
+
+  /workflows:
+    get:
+      tags: [Workflows]
+      summary: List workflows
+      description: Admins see every workflow (including inactive drafts); everyone else sees only `active` ones.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/Workflow" }
+    post:
+      tags: [Workflows]
+      summary: Create a workflow with its steps (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WorkflowCreateRequest" }
+            example:
+              name: Purchase Request
+              description: Approval flow for purchases
+              steps:
+                - step_order: 1
+                  name: Finance Review
+                  approver_role: approver
+                  approval_type: single
+                  conditions: []
+                - step_order: 2
+                  name: Legal Review
+                  approver_role: approver
+                  approval_type: single
+                  conditions:
+                    - { field: amount, operator: ">", value: 10000 }
+                - step_order: 3
+                  name: Executive Approval
+                  approver_role: approver
+                  approval_type: all
+                  conditions:
+                    - { field: amount, operator: ">", value: 50000 }
+      responses:
+        "201":
+          description: Workflow created
+        "422":
+          description: Validation failed
+
+  /workflows/{id}:
+    get:
+      tags: [Workflows]
+      summary: Show a workflow, including its current step definitions
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/WorkflowWithSteps" }
+        "404":
+          description: Not found
+    put:
+      tags: [Workflows]
+      summary: Update a workflow's name/description/status (admin only)
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+                status: { type: string, enum: [active, inactive] }
+      responses:
+        "200":
+          description: Updated
+        "404":
+          description: Not found
+
+  /workflows/{id}/steps:
+    put:
+      tags: [Workflows]
+      summary: Replace a workflow's entire step list (admin only)
+      description: >-
+        Requests already in progress are unaffected - each one holds its own
+        immutable snapshot of the steps taken at submission time.
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [steps]
+              properties:
+                steps:
+                  type: array
+                  items: { $ref: "#/components/schemas/StepDefinition" }
+      responses:
+        "200":
+          description: Steps replaced
+        "404":
+          description: Not found
+        "422":
+          description: Validation failed
+
+  /requests:
+    get:
+      tags: [Requests]
+      summary: List requests
+      description: Admins see every request; everyone else sees only their own submitted requests.
+      responses:
+        "200":
+          description: OK
+    post:
+      tags: [Requests]
+      summary: Submit a request against a workflow
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [workflow_id]
+              properties:
+                workflow_id: { type: integer, example: 1 }
+                data:
+                  type: object
+                  description: Free-form payload - whatever fields the workflow's step conditions reference.
+                  additionalProperties: true
+                  example: { amount: 12000, department: Finance }
+      responses:
+        "201":
+          description: Request submitted
+        "422":
+          description: Validation failed / workflow not active / no approval steps
+
+  /requests/{id}:
+    get:
+      tags: [Requests]
+      summary: Full request detail, including approvals and audit trail
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/RequestDetail" }
+        "403":
+          description: Not the owner, an involved approver, or an admin
+        "404":
+          description: Not found
+
+  /requests/{id}/resubmit:
+    post:
+      tags: [Requests]
+      summary: Edit and resubmit a "returned" request
+      description: Only the original requester may resubmit. Evaluation restarts from the first reachable step against the new data.
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [data]
+              properties:
+                data:
+                  type: object
+                  additionalProperties: true
+      responses:
+        "200":
+          description: Resubmitted
+        "422":
+          description: Not the owner, or request is not currently "returned"
+
+  /requests/{id}/history:
+    get:
+      tags: [Requests]
+      summary: Read-only audit trail for a request
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not found
+
+  /approvals:
+    get:
+      tags: [Approvals]
+      summary: Requests currently awaiting your action
+      description: Includes anything assigned directly to you, plus anything you can act on via an active delegation.
+      responses:
+        "200":
+          description: OK
+
+  /requests/{id}/approve:
+    post:
+      tags: [Approvals]
+      summary: Approve the request's current step (approver/admin)
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ActionBody" }
+      responses:
+        "200":
+          description: Recorded
+        "422":
+          description: Not pending, or you're not authorized to act on this step
+
+  /requests/{id}/reject:
+    post:
+      tags: [Approvals]
+      summary: Reject the request outright (approver/admin)
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ActionBody" }
+      responses:
+        "200":
+          description: Recorded
+        "422":
+          description: Not pending, or you're not authorized to act on this step
+
+  /requests/{id}/return:
+    post:
+      tags: [Approvals]
+      summary: Return the request to the requester for edits (approver/admin)
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ActionBody" }
+      responses:
+        "200":
+          description: Recorded
+        "422":
+          description: Not pending, or you're not authorized to act on this step
+
+  /delegations:
+    get:
+      tags: [Delegations]
+      summary: List delegations you've created
+      responses:
+        "200":
+          description: OK
+    post:
+      tags: [Delegations]
+      summary: Delegate your approvals to another approver/admin for a date range
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [delegate_id, start_date, end_date]
+              properties:
+                delegate_id: { type: integer, example: 3 }
+                start_date: { type: string, format: date, example: "2026-07-01" }
+                end_date: { type: string, format: date, example: "2026-07-10" }
+      responses:
+        "201":
+          description: Delegation created
+        "422":
+          description: Invalid delegate, self-delegation, or end_date before start_date
+
+  /delegations/{id}:
+    delete:
+      tags: [Delegations]
+      summary: Revoke your own delegation
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      responses:
+        "200":
+          description: Revoked
+        "403":
+          description: Not your delegation
+        "404":
+          description: Not found
+
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Your notification inbox
+      parameters:
+        - name: unread
+          in: query
+          schema: { type: integer, enum: [1] }
+          description: Pass `unread=1` to return unread notifications only.
+      responses:
+        "200":
+          description: OK
+
+  /notifications/{id}/read:
+    patch:
+      tags: [Notifications]
+      summary: Mark one notification as read
+      parameters:
+        - $ref: "#/components/parameters/IdPathParam"
+      responses:
+        "200":
+          description: Marked as read
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    IdPathParam:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+
+  schemas:
+    Envelope:
+      type: object
+      properties:
+        success: { type: boolean }
+        message: { type: string }
+        data: {}
+        errors: { type: object }
+
+    User:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string }
+        role: { type: string, enum: [admin, approver, requester] }
+        is_active: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    Condition:
+      type: object
+      required: [field, operator, value]
+      properties:
+        field: { type: string, example: amount }
+        operator: { type: string, enum: ["=", "!=", ">", ">=", "<", "<=", contains, in] }
+        value: {}
+
+    StepDefinition:
+      type: object
+      required: [step_order, name, approval_type]
+      properties:
+        step_order: { type: integer }
+        name: { type: string }
+        approver_role: { type: string, enum: [admin, approver, requester], nullable: true }
+        approver_user_id: { type: integer, nullable: true }
+        approval_type: { type: string, enum: [single, all] }
+        conditions:
+          type: array
+          items: { $ref: "#/components/schemas/Condition" }
+
+    Workflow:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        status: { type: string, enum: [active, inactive] }
+        version: { type: integer }
+        created_by: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    WorkflowWithSteps:
+      allOf:
+        - $ref: "#/components/schemas/Workflow"
+        - type: object
+          properties:
+            steps:
+              type: array
+              items: { $ref: "#/components/schemas/StepDefinition" }
+
+    WorkflowCreateRequest:
+      type: object
+      required: [name, steps]
+      properties:
+        name: { type: string }
+        description: { type: string }
+        steps:
+          type: array
+          items: { $ref: "#/components/schemas/StepDefinition" }
+
+    RequestApproval:
+      type: object
+      properties:
+        id: { type: integer }
+        request_id: { type: integer }
+        step_order: { type: integer }
+        approver_id: { type: integer }
+        approver_name: { type: string }
+        status: { type: string, enum: [pending, approved, rejected, skipped] }
+        acted_by: { type: integer, nullable: true }
+        acted_by_name: { type: string, nullable: true }
+        comments: { type: string, nullable: true }
+        acted_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    AuditLogEntry:
+      type: object
+      properties:
+        id: { type: integer }
+        request_id: { type: integer }
+        action: { type: string }
+        user_id: { type: integer }
+        user_name: { type: string }
+        previous_status: { type: string, nullable: true }
+        new_status: { type: string, nullable: true }
+        comments: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    RequestDetail:
+      type: object
+      properties:
+        id: { type: integer }
+        workflow_id: { type: integer }
+        requester_id: { type: integer }
+        requester_name: { type: string }
+        data:
+          type: object
+          additionalProperties: true
+        workflow_snapshot:
+          type: array
+          items: { $ref: "#/components/schemas/StepDefinition" }
+        status: { type: string, enum: [pending, approved, rejected, returned] }
+        current_step_order: { type: integer, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        approvals:
+          type: array
+          items: { $ref: "#/components/schemas/RequestApproval" }
+        audit_trail:
+          type: array
+          items: { $ref: "#/components/schemas/AuditLogEntry" }
+
+    ActionBody:
+      type: object
+      properties:
+        comments: { type: string, nullable: true, example: Looks good to me. }

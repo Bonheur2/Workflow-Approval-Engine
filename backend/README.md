@@ -42,8 +42,14 @@ curl -X POST http://localhost:8000/api/auth/login \
 (Seeded accounts and passwords are printed by `database/seed.php` and
 also listed at the bottom of this file.)
 
-Full endpoint reference: [`docs/API.md`](docs/API.md).
-Schema reference: [`docs/ER_DIAGRAM.md`](docs/ER_DIAGRAM.md).
+## API documentation
+
+| Resource | Where |
+|---|---|
+| Human-readable endpoint reference | [`docs/API.md`](docs/API.md) |
+| OpenAPI 3.0 spec | [`docs/openapi.yaml`](docs/openapi.yaml) - paste into [editor.swagger.io](https://editor.swagger.io) for an interactive Swagger UI, or open with any OpenAPI-aware IDE plugin |
+| Postman collection | [`docs/postman_collection.json`](docs/postman_collection.json) - import into Postman; running **Auth &rarr; Login** auto-saves the returned JWT into the `{{token}}` collection variable used by every other request |
+| Schema / ER diagram | [`docs/ER_DIAGRAM.md`](docs/ER_DIAGRAM.md) |
 
 ## Running the tests
 
@@ -196,9 +202,10 @@ across arbitrary business processes without code changes.
 ## Trade-offs and limitations
 
 - **No framework** means no request-scoped DI container, no built-in ORM,
-  no auto-generated OpenAPI spec - `docs/API.md` is hand-written instead.
-  This is a deliberate trade against "runs successfully with zero
-  install friction."
+  no attribute/annotation-based OpenAPI generation - `docs/openapi.yaml`
+  and `docs/API.md` are hand-written and kept in sync manually rather than
+  derived from code. This is a deliberate trade against "runs successfully
+  with zero install friction."
 - **JWT has no revocation list.** Deactivating a user (`is_active=0`)
   blocks new logins, but a token issued before deactivation remains
   valid until it expires (default TTL: 1 hour). A production system
