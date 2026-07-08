@@ -42,6 +42,7 @@ require __DIR__ . '/../templates/header.php';
   <div class="card">
     <p>Current step count: <strong><?= count($workflow['steps']) ?></strong></p>
     <form method="get">
+      <input type="hidden" name="id" value="<?= (int) $id ?>">
       <label>How many steps should the new definition have?</label>
       <input type="number" name="steps_count" min="1" max="20" value="<?= $defaultCount ?>" required>
       <p style="margin-top:16px;"><button type="submit" class="btn btn-primary">Continue &rarr;</button></p>
