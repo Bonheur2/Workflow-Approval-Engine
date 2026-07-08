@@ -154,6 +154,44 @@ class WorkflowEngineTest extends TestCase
         $this->assertThrows(fn() => WorkflowEngine::submit($this->workflowId, $requesterId, ['amount' => 100]));
     }
 
+    public function testRequesterCannotApproveOwnRequestEvenWithMatchingRole(): void
+    {
+        $this->seed();
+        // Finance holds the 'approver' role - the same role Step 1 assigns
+        // to. If Finance submits their own request, they must not become
+        // one of Step 1's eligible approvers, even though their role
+        // matches; another 'approver' (Legal) still can.
+        ['financeId' => $financeId, 'legalId' => $legalId] = $this->users;
+
+        $request = WorkflowEngine::submit($this->workflowId, $financeId, ['amount' => 200]);
+
+        $this->assertThrows(
+            fn() => WorkflowEngine::approve($request['id'], $financeId, 'self-approving'),
+            'A requester must never be able to approve their own request, even if their role matches the step.'
+        );
+
+        $request = WorkflowEngine::approve($request['id'], $legalId, 'approving on behalf of the team');
+        $this->assertEquals('approved', $request['status'], 'A different eligible approver must still be able to act.');
+    }
+
+    public function testRequesterExcludedAsSpecificallyNamedApprover(): void
+    {
+        $this->seed();
+        // A step naming the requester specifically as approver_user_id
+        // must be skipped for them too, not just role-based assignment.
+        $adminId = $this->users['adminId'];
+        $requesterId = $this->users['requesterId'];
+        $selfApproveWorkflowId = Workflow::create('Self-approve test', 'test', $adminId);
+        WorkflowStep::create($selfApproveWorkflowId, 1, 'Self Review', null, $requesterId, 'single', []);
+
+        $request = WorkflowEngine::submit($selfApproveWorkflowId, $requesterId, ['amount' => 200]);
+        // No eligible approver remains once the requester is excluded, so
+        // the engine skips forward; with no further steps, it auto-approves
+        // rather than deadlocking - the same behaviour as "no approver found".
+        $this->assertEquals('approved', $request['status']);
+        $this->assertNull($request['current_step_order']);
+    }
+
     public function testEditingWorkflowStepsDoesNotAffectInFlightRequest(): void
     {
         $this->seed();

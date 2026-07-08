@@ -1,8 +1,11 @@
 # Database Schema
 
-Two equivalent migrations are provided:
+Three equivalent migrations are provided:
 - `database/migrations/sqlite/001_create_tables.sql` (default, zero-config)
 - `database/migrations/mysql/001_create_tables.sql` (production-style alternative)
+- `database/migrations/pgsql/001_create_tables.sql` (production-style alternative; boolean-ish
+  columns use `SMALLINT` rather than native `BOOLEAN` so the same `= 1`/`= 0` literals the
+  Models layer already uses work unchanged across all three drivers)
 
 ## Entity-relationship overview
 
