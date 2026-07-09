@@ -10,7 +10,7 @@
     "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
   },
   "variable": [
-    { "key": "base_url", "value": "http://localhost:8000/api", "type": "string" },
+    { "key": "base_url", "value": "https://workflow-backend-virm.onrender.com/api", "type": "string" },
     { "key": "token", "value": "", "type": "string" },
     { "key": "workflow_id", "value": "1", "type": "string" },
     { "key": "request_id", "value": "1", "type": "string" },

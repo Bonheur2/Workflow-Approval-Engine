@@ -41,6 +41,28 @@ workflow-approval-engine/
   curl/Postman? Run `backend/` first, then `frontend/` on a different
   port - see [`frontend/README.md`](frontend/README.md).
 
+## Live deployment
+
+The backend API is deployed and reachable right now - no local setup
+required to try it:
+
+```
+https://workflow-backend-virm.onrender.com/api
+```
+
+```bash
+curl https://workflow-backend-virm.onrender.com/api/health
+
+curl -X POST https://workflow-backend-virm.onrender.com/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@itec.rw","password":"AdminPass123"}'
+```
+
+The Postman collection and OpenAPI spec (below) are both pre-configured
+to point at this URL by default. It runs on Render's free tier, backed by
+a managed PostgreSQL database, so the first request after a period of
+inactivity may take a few seconds to wake up.
+
 ## Quick start (both pieces, from scratch)
 
 ```bash
@@ -49,7 +71,7 @@ cd backend
 cp .env.example .env
 php database/migrate.php
 php database/seed.php
-php tests/run.php          # optional sanity check - expect 24/24 passing
+php tests/run.php          # optional sanity check - expect 26/26 passing
 php -S localhost:8000 public/index.php &
 
 # 2. Frontend (in a second terminal)

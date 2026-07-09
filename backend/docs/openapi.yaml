@@ -25,13 +25,10 @@ info:
     name: Unlicense / internal evaluation use
 
 servers:
+  - url: https://workflow-backend-virm.onrender.com/api
+    description: Deployed backend (Render)
   - url: http://localhost:8000/api
     description: Local development
-  - url: https://{host}/api
-    description: Deployed backend (e.g. Render)
-    variables:
-      host:
-        default: your-backend.onrender.com
 
 tags:
   - name: Auth

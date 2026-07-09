@@ -95,4 +95,18 @@ $router->get('/api/health', function () {
     \App\Core\Response::success(['status' => 'ok', 'time' => date('c')]);
 });
 
+// ---------------------------------------------------------------------
+// API documentation (public, no auth) - serves the hand-written OpenAPI
+// spec and a Swagger UI page that renders it, straight from the deployed
+// backend with no separate hosting step.
+// ---------------------------------------------------------------------
+$router->get('/api/docs', function () {
+    header('Content-Type: text/html; charset=utf-8');
+    readfile(__DIR__ . '/../docs/swagger-ui.html');
+});
+$router->get('/api/openapi.yaml', function () {
+    header('Content-Type: application/yaml; charset=utf-8');
+    readfile(__DIR__ . '/../docs/openapi.yaml');
+});
+
 $router->dispatch(new Request());

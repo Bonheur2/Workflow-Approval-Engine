@@ -64,7 +64,7 @@ test method for full isolation. It currently covers:
 - `ConditionEvaluatorTest` - the conditional-routing operators (`>`, `=`, `in`, `contains`, AND-combination, fail-closed on missing fields).
 - `JWTTest` - encode/decode round trip, expiry, tampering, malformed tokens.
 - `ValidatorTest` - the request-validation helper.
-- `WorkflowEngineTest` - the full engine: conditional step skipping, parallel (`all`) approval, rejection, return-for-modification + resubmit, delegation, unauthorized-actor rejection, inactive-workflow guard, and the workflow-edit-doesn't-affect-in-flight-requests guarantee.
+- `WorkflowEngineTest` - the full engine: conditional step skipping, parallel (`all`) approval, rejection, return-for-modification + resubmit, delegation, unauthorized-actor rejection, inactive-workflow guard, self-approval prevention (by role and by specific assignment), and the workflow-edit-doesn't-affect-in-flight-requests guarantee.
 
 ## Switching to MySQL
 
